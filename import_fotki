@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# Imports photos and/or movies from a directory and moves them
+# into proper location according to the pattern:
+#
+# dest_dir/YYYY/YYYY-MM/roll_name-YYYY-MM/
+#
+# e.g.: /home/siefca/Photos/2014/2014-04/morning-sun-2014-04/IMG01.jpg
+#
+
+# Settings:
+#
+dst=~/Obrazy/Zdjęcia
+vid_dst=~/Wideo
+
+# Script:
+
+move=0
+o_opt="-o /tmp"
+
+while test $# -gt 0; do
+    case "$1" in
+        -m|--move)
+            move=1
+	        o_opt=''
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+src="$1"
+
+if [ "${src}" = "" ]; then
+    echo "Usage: $0 [-m|--move] source_directory [roll_name]"
+    exit 1
+fi
+
+if [ "$2" != "" ]; then
+    rolka="$2"
+    rolka_given="1"
+else
+    rolka_given="0"
+fi
+
+if [ "${rolka}" = "" -o "${rolka}" = "." -o "${rolka}" = ".." ]; then
+    rolka=$(readlink -f "${src}")
+fi
+
+rolka=$(basename "${rolka}")
+
+if [ "${rolka}" = "" -o "${rolka}" = "." -o "${rolka}" = ".." ]; then
+    rolka=$(readlink -f "${src}")
+fi
+
+rolka="${rolka#.}"
+
+if [ "${rolka_given}" != "1" ]; then
+    rolka="${rolka%%-[0-9]*-[0-9]*}"
+fi
+
+if [ "${rolka}" = "" -o "${rolka}" = "." -o "${rolka}" = ".." ]; then
+    echo "Cannot establish a roll name - enter it manually"
+    exit 1
+fi
+
+echo "Using ${rolka} as a roll name."
+
+my_tty=$(tty)
+
+find . \( -type f -o -type l \) -print | while read l; do
+
+    filename="${l##*/}"
+    extension="${filename##*.}"
+    filebase="${filename%.*}"
+
+    extenstion=$(echo "${extension}" | tr '[:upper:]' '[:lower:]')
+    case $extension in
+        avi|mvi|mov|divx|dvx|3gp|3gpp|3g2|3gp2|mpg|mpeg|asf|dv|dvb|f4a|f4b|f4p|f4v|flv)
+            d=$vid_dst
+            ;;
+        ts|m2ts|mts|m2t|m4a|m4v|m4b|m4p|mp4|qt|m2v|mpo|mqv|swf|vob|webm|wma|wmv|rmvb|rm|rv)
+            d=$vid_dst
+            ;;
+        *)
+            d=$dst
+            ;;
+    esac
+
+    dest_dir="${d}/%Y/%Y-%m/${rolka}-%Y-%m"
+
+    #echo "Location: ${d}"
+
+    exec 3>&1
+    o=$( exiftool ${o_opt} -d "${dest_dir}" '-directory<datetimeoriginal' "${l}" 2>&1 1>&3)
+    echo "${o}" 1>&2
+    exec 3>&-
+
+    if [ $? -ne 0 -o "${o}" != "${o##*No writable tags set from*}" ]; then
+        echo "Trying different tag.."
+        exiftool ${o_opt} -d "${dest_dir}" '-directory<createdate' "${l}"
+        echo
+    fi
+
+done
+
+exit 0
+
