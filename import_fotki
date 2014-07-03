@@ -70,7 +70,7 @@ echo "Using ${rolka} as a roll name."
 
 my_tty=$(tty)
 
-find . \( -type f -o -type l \) -print | while read l; do
+find "${src}" \( -type f -o -type l \) -print | while read l; do
 
     filename="${l##*/}"
     extension="${filename##*.}"
