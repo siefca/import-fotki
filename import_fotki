@@ -11,7 +11,7 @@
 # Settings:
 #
 dst=~/Obrazy/Zdjęcia
-vid_dst=~/Wideo
+vid_dst=~/Wideo/Klipy
 
 # Script:
 
@@ -32,6 +32,9 @@ while test $# -gt 0; do
 done
 
 src="$1"
+
+[ -d "${dst}" ] || mkdir -p "${dst}"
+[ -d "${vid_dst}" ] || mkdir -p "${vid_dst}"
 
 if [ "${src}" = "" ]; then
     echo "Usage: $0 [-m|--move] source_directory [roll_name]"
