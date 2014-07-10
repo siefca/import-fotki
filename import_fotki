@@ -10,13 +10,15 @@
 
 # Settings:
 #
-dst=~/Obrazy/Zdjęcia
-vid_dst=~/Wideo/Klipy
+PHOTOS_DIR=~/Obrazy/Zdjęcia
+VIDEOS_DIR=~/Wideo/Klipy
 
 # Script:
 
 move=0
 o_opt="-o /tmp"
+dst="${PHOTOS_DIR}"
+vid_dst="${VIDEOS_DIR}"
 
 while test $# -gt 0; do
     case "$1" in
@@ -79,7 +81,7 @@ find "${src}" \( -type f -o -type l \) -print | while read l; do
     extension="${filename##*.}"
     filebase="${filename%.*}"
 
-    extenstion=$(echo "${extension}" | tr '[:upper:]' '[:lower:]')
+    extension=$(echo "${extension}" | tr '[:upper:]' '[:lower:]')
     case $extension in
         avi|mvi|mov|divx|dvx|3gp|3gpp|3g2|3gp2|mpg|mpeg|asf|dv|dvb|f4a|f4b|f4p|f4v|flv)
             d=$vid_dst
@@ -94,7 +96,9 @@ find "${src}" \( -type f -o -type l \) -print | while read l; do
 
     dest_dir="${d}/%Y/%Y-%m/${rolka}-%Y-%m"
 
+    #echo "Extension: ${extension}"
     #echo "Location: ${d}"
+    #echo "Dest dir: ${dest_dir}"
 
     exec 3>&1
     o=$( exiftool ${o_opt} -d "${dest_dir}" '-directory<datetimeoriginal' "${l}" 2>&1 1>&3)
